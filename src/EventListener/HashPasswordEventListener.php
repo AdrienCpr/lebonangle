@@ -14,7 +14,7 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 class HashPasswordEventListener
 {
 
-    public function __construct(private readonly UserPasswordHasherInterface $passwordHasher,){
+    public function __construct(private readonly UserPasswordHasherInterface $passwordHasher){
 
     }
 
@@ -42,5 +42,4 @@ class HashPasswordEventListener
         $entity->setPassword($this->passwordHasher->hashPassword($entity, $entity->getPlainPassword()));
         $entity->setPlainPassword(null);
     }
-
 }
