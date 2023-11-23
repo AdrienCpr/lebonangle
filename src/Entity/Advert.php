@@ -18,11 +18,9 @@ class Advert
     private ?int $id = null;
 
     #[ORM\Column(length: 100)]
-    #[Assert\Range(min: 3,max: 100)]
     private ?string $title = null;
 
-    #[ORM\Column(type: Types::TEXT)]
-    #[Assert\Range(max: 1200)]
+    #[ORM\Column(type: Types::TEXT, length: 1200)]
     private ?string $content = null;
 
     #[ORM\Column(length: 255)]
