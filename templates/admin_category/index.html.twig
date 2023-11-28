@@ -3,33 +3,66 @@
 {% block title %}Category index{% endblock %}
 
 {% block body %}
-    <h1>Category index</h1>
+    {% for message in app.flashes('error') %}
+        <div class="bg-red-500 text-white p-4 mb-4 rounded relative">
+            {{ message }}
+            <button type="button" class="absolute top-0 right-0 px-3 py-1" onclick="this.parentElement.style.display = 'none';">&times;</button>
+        </div>
+    {% endfor %}
 
-    <table class="table">
+    <h1 class="text-2xl font-bold mb-4">Category index</h1>
+
+    <table class="table border-collapse border">
         <thead>
-            <tr>
-                <th>Id</th>
-                <th>Name</th>
-                <th>actions</th>
-            </tr>
+        <tr>
+            <th class="border px-4 py-2">Id</th>
+            <th class="border px-4 py-2">Name</th>
+            <th class="border px-4 py-2">Actions</th>
+        </tr>
         </thead>
         <tbody>
         {% for category in categories %}
             <tr>
-                <td>{{ category.id }}</td>
-                <td>{{ category.name }}</td>
-                <td>
-                    <a href="{{ path('app_admin_category_show', {'id': category.id}) }}">show</a>
-                    <a href="{{ path('app_admin_category_edit', {'id': category.id}) }}">edit</a>
+                <td class="border px-4 py-2">{{ category.id }}</td>
+                <td class="border px-4 py-2">{{ category.name }}</td>
+                <td class="border px-4 py-2">
+                    <a href="{{ path('app_admin_category_show', {'id': category.id}) }}" class="text-blue-500 hover:underline">Show</a>
+                    <a href="{{ path('app_admin_category_edit', {'id': category.id}) }}" class="text-green-500 hover:underline ml-2">Edit</a>
                 </td>
             </tr>
         {% else %}
             <tr>
-                <td colspan="3">no records found</td>
+                <td colspan="3" class="border px-4 py-2">No records found</td>
             </tr>
         {% endfor %}
         </tbody>
     </table>
 
-    <a href="{{ path('app_admin_category_new') }}">Create new</a>
+    <div class="flex justify-between items-center mt-4">
+        <div>
+            {% if maxPages > 1 %}
+                {% for page in 1..maxPages %}
+                    <a href="{{ path('app_admin_category_index', {'page': page}) }}" class="bg-blue-400 text-white py-2 px-4 rounded-md hover:bg-blue-600 focus:outline-none focus:shadow-outline-blue mr-2 {% if page == currentPage %}font-bold{% endif %}">
+                        {{ page }}
+                    </a>
+                {% endfor %}
+            {% endif %}
+        </div>
+        <div class="flex">
+            {% if currentPage > 1 %}
+                <a href="{{ path('app_admin_category_index', {'page': currentPage - 1}) }}" class="bg-gray-200 text-black py-2 px-4 rounded-md hover:bg-gray-300 focus:outline-none focus:shadow-outline-blue mr-2">
+                    Previous
+                </a>
+            {% endif %}
+            {% if currentPage < maxPages %}
+                <a href="{{ path('app_admin_category_index', {'page': currentPage + 1}) }}" class="bg-gray-200 text-black py-2 px-4 rounded-md hover:bg-gray-300 focus:outline-none focus:shadow-outline-blue ml-2">
+                    Next
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <a href="{{ path('app_admin_category_new') }}" class="mt-4 p-2 bg-blue-500 text-white rounded">Create new</a>
+    <a href="{{ path('app_home') }}" class="mt-4 p-2 bg-blue-500 text-white rounded">Back to homepage</a>
+
 {% endblock %}

@@ -3,47 +3,72 @@
 {% block title %}Advert index{% endblock %}
 
 {% block body %}
-    <h1>Advert index</h1>
+    {% for message in app.flashes('success') %}
+        <div class="bg-green-500 text-white p-4 mb-4 rounded">
+            {{ message }}
+            <button type="button" class="absolute top-0 right-0 px-3 py-1" onclick="this.parentElement.style.display = 'none';">&times;</button>
+        </div>
+    {% endfor %}
+    <h1 class="text-2xl font-bold mb-4">Advert index</h1>
 
-    <table class="table">
+    <table class="table-auto w-full border-collapse border">
         <thead>
-            <tr>
-                <th>Id</th>
-                <th>Title</th>
-                <th>Content</th>
-                <th>Author</th>
-                <th>Email</th>
-                <th>Price</th>
-                <th>State</th>
-                <th>CreatedAt</th>
-                <th>PublishedAt</th>
-                <th>actions</th>
-            </tr>
+        <tr>
+            <th class="border px-4 py-2">Id</th>
+            <th class="border px-4 py-2">Title</th>
+            <th class="border px-4 py-2">Content</th>
+            <th class="border px-4 py-2">Author</th>
+            <th class="border px-4 py-2">Email</th>
+            <th class="border px-4 py-2">Price</th>
+            <th class="border px-4 py-2">State</th>
+            <th class="border px-4 py-2">CreatedAt</th>
+            <th class="border px-4 py-2">PublishedAt</th>
+            <th class="border px-4 py-2">Pictures</th>
+            <th class="border px-4 py-2">Actions</th>
+        </tr>
         </thead>
         <tbody>
         {% for advert in adverts %}
             <tr>
-                <td>{{ advert.id }}</td>
-                <td>{{ advert.title }}</td>
-                <td>{{ advert.content }}</td>
-                <td>{{ advert.author }}</td>
-                <td>{{ advert.email }}</td>
-                <td>{{ advert.price }}</td>
-                <td>{{ advert.state }}</td>
-                <td>{{ advert.createdAt ? advert.createdAt|date('Y-m-d H:i:s') : '' }}</td>
-                <td>{{ advert.publishedAt ? advert.publishedAt|date('Y-m-d H:i:s') : '' }}</td>
-                <td>
-                    <a href="{{ path('app_advert_show', {'id': advert.id}) }}">show</a>
-                    <a href="{{ path('app_advert_edit', {'id': advert.id}) }}">edit</a>
+                <td class="border px-4 py-2">{{ advert.id }}</td>
+                <td class="border px-4 py-2">{{ advert.title }}</td>
+                <td class="border px-4 py-2">{{ advert.content }}</td>
+                <td class="border px-4 py-2">{{ advert.author }}</td>
+                <td class="border px-4 py-2">{{ advert.email }}</td>
+                <td class="border px-4 py-2">{{ advert.price }}</td>
+                <td class="border px-4 py-2">{{ advert.state }}</td>
+                <td class="border px-4 py-2">{{ advert.createdAt ? advert.createdAt|date('Y-m-d H:i:s') : '' }}</td>
+                <td class="border px-4 py-2">{{ advert.publishedAt ? advert.publishedAt|date('Y-m-d H:i:s') : '' }}</td>
+                <td class="border px-4 py-2">
+                    {% for picture in advert.getPictures() %}
+                        {% if picture.getPath() %}
+                            <img src="{{ asset('uploads/pictures/' ~ picture.getPath()) }}" alt="Advert Image" class="max-w-100 max-h-100">
+                        {% else %}
+                            No Image
+                        {% endif %}
+                    {% else %}
+                        No Pictures
+                    {% endfor %}
+                </td>
+                <td class="border px-4 py-2">
+                    <a href="{{ path('app_advert_show', {'id': advert.id}) }}" class="text-blue-500 hover:underline">show</a>
+                    {% if workflow_can(advert, 'publish') %}
+                        <a href="{{ path('app_advert_change_state', {'id': advert.id, 'transition': "publish"}) }}" class="text-green-500 hover:underline ml-2">publish</a>
+                        <a href="{{ path('app_advert_change_state', {'id': advert.id, 'transition': "reject"}) }}" class="text-red-600 hover:underline ml-2">reject</a>
+                    {% elseif workflow_can(advert, 'reject_publish') %}
+                        <a href="{{ path('app_advert_change_state', {'id': advert.id, 'transition': "reject_publish"}) }}" class="text-red-600 hover:underline ml-2">reject</a>
+                    {% endif %}
+
+                    {#                    <a href="{{ path('app_advert_edit', {'id': advert.id}) }}" class="text-green-500 hover:underline ml-2">edit</a>#}
                 </td>
             </tr>
         {% else %}
             <tr>
-                <td colspan="10">no records found</td>
+                <td colspan="10" class="border px-4 py-2">No records found</td>
             </tr>
         {% endfor %}
         </tbody>
     </table>
 
-    <a href="{{ path('app_advert_new') }}">Create new</a>
+    <a href="{{ path('app_home') }}" class="mt-4 p-2 bg-blue-500 text-white rounded">Back to homepage</a>
 {% endblock %}

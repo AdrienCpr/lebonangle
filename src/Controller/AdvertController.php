@@ -3,17 +3,29 @@
 namespace App\Controller;
 
 use App\Entity\Advert;
+use App\Entity\Picture;
 use App\Form\AdvertType;
 use App\Repository\AdvertRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\File\Exception\FileException;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\String\Slugger\SluggerInterface;
+use Symfony\Component\Workflow\WorkflowInterface;
 
 //#[Route('/advert')]
 class AdvertController extends AbstractController
 {
+    public function __construct(
+        private readonly WorkflowInterface $advertWorkflow,
+    )
+    {
+    }
+
     #[Route('/admin/advert', name: 'app_advert_index', methods: ['GET'])]
     public function index(AdvertRepository $advertRepository): Response
     {
@@ -23,15 +35,36 @@ class AdvertController extends AbstractController
     }
 
     #[Route('/advert/new', name: 'app_advert_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $entityManager): Response
+    public function new(Request $request, EntityManagerInterface $entityManager, SluggerInterface $slugger): Response
     {
         $advert = new Advert();
-        $advert->setState("draft");
-        $advert->setCreatedAt(new \DateTime());
-        $form = $this->createForm(AdvertType::class, $advert,['is_edit' => false]);
+        $form = $this->createForm(AdvertType::class,
+            $advert
+//            , ['is_edit' => false]
+        );
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $picturesFile = $form->get('pictures')->getData();
+
+            foreach ($picturesFile as $pictureFile) {
+                if ($pictureFile instanceof UploadedFile) {
+                    $newFilename = uniqid() . '.' . $pictureFile->guessExtension();
+                    try {
+                        $pictureFile->move(
+                            $this->getParameter('pictures_directory'),
+                            $newFilename
+                        );
+                    } catch (FileException $e) {
+                    }
+
+                    $picture = new Picture();
+                    $picture->setPath($newFilename);
+
+                    $advert->addPicture($picture);
+                }
+            }
+
             $entityManager->persist($advert);
             $entityManager->flush();
 
@@ -40,7 +73,7 @@ class AdvertController extends AbstractController
 
         return $this->render('advert/new.html.twig', [
             'advert' => $advert,
-            'form' => $form,
+            'form' => $form->createView(),
         ]);
     }
 
@@ -52,23 +85,43 @@ class AdvertController extends AbstractController
         ]);
     }
 
-    #[Route('/admin/advert/{id}/edit', name: 'app_advert_edit', methods: ['GET', 'POST'])]
-    public function edit(Request $request, Advert $advert, EntityManagerInterface $entityManager): Response
+    #[Route('/admin/advert/state/{id}/{transition}', name: 'app_advert_change_state', methods: ['GET', 'POST'])]
+    public function changeState(Advert $advert, Request $request, EntityManagerInterface $entityManager,MailerInterface $mailer): Response
     {
-        $form = $this->createForm(AdvertType::class, $advert,['is_edit' => true]);
-        $form->handleRequest($request);
+        $transition = $request->attributes->get('transition');
+        $this->advertWorkflow->apply($advert, $transition);
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $entityManager->flush();
-
-            return $this->redirectToRoute('app_advert_index', [], Response::HTTP_SEE_OTHER);
+        if ($transition === 'publish') {
+            $advert->setPublishedAt(new \DateTime());
+            (new MailerController)->sendEmail($advert->getEmail(), $mailer);
+        } else {
+            $advert->setPublishedAt(null);
         }
 
-        return $this->render('advert/edit.html.twig', [
-            'advert' => $advert,
-            'form' => $form,
-        ]);
+        $entityManager->persist($advert);
+        $entityManager->flush();
+
+        $this->addFlash('success', 'State changed successfully');
+        return $this->redirectToRoute('app_advert_index');
     }
+
+//    #[Route('/admin/advert/{id}/edit', name: 'app_advert_edit', methods: ['GET', 'POST'])]
+//    public function edit(Request $request, Advert $advert, EntityManagerInterface $entityManager): Response
+//    {
+//        $form = $this->createForm(AdvertType::class, $advert,['is_edit' => true]);
+//        $form->handleRequest($request);
+//
+//        if ($form->isSubmitted() && $form->isValid()) {
+//            $entityManager->flush();
+//
+//            return $this->redirectToRoute('app_advert_index', [], Response::HTTP_SEE_OTHER);
+//        }
+//
+//        return $this->render('advert/edit.html.twig', [
+//            'advert' => $advert,
+//            'form' => $form,
+//        ]);
+//    }
 //
 //    #[Route('/{id}', name: 'app_advert_delete', methods: ['POST'])]
 //    public function delete(Request $request, Advert $advert, EntityManagerInterface $entityManager): Response

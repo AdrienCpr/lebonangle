@@ -3,6 +3,12 @@
 {% block title %}AdminUser index{% endblock %}
 
 {% block body %}
+    {% for message in app.flashes('error') %}
+        <div class="bg-red-500 text-white p-4 mb-4 rounded">
+            {{ message }}
+            <button type="button" class="absolute top-0 right-0 px-3 py-1" onclick="this.parentElement.style.display = 'none';">&times;</button>
+        </div>
+    {% endfor %}
     <div class="container mx-auto p-4">
         <h1 class="text-2xl font-bold mb-4">AdminUser index</h1>
 
@@ -12,7 +18,6 @@
                 <th class="border p-2">Id</th>
                 <th class="border p-2">Username</th>
                 <th class="border p-2">Email</th>
-                <th class="border p-2">Roles</th>
                 <th class="border p-2">Password</th>
                 <th class="border p-2">Actions</th>
             </tr>
@@ -23,7 +28,6 @@
                     <td class="border p-2">{{ admin_user.id }}</td>
                     <td class="border p-2">{{ admin_user.username }}</td>
                     <td class="border p-2">{{ admin_user.email }}</td>
-                    <td class="border p-2">{{ admin_user.roles ? admin_user.roles|json_encode : '' }}</td>
                     <td class="border p-2">{{ admin_user.password }}</td>
                     <td class="border p-2">
                         <a href="{{ path('app_admin_user_show', {'id': admin_user.id}) }}"
@@ -41,7 +45,8 @@
         </table>
 
         <a href="{{ path('app_admin_user_new') }}"
-           class="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 focus:outline-none focus:shadow-outline-blue mt-4 inline-block">Create
-            new</a>
+           class="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 focus:outline-none focus:shadow-outline-blue mt-4 inline-block">Create new
+        </a>
+        <a href="{{ path('app_home') }}" class="mt-4 p-2 bg-blue-500 text-white rounded">Back to homepage</a>
     </div>
 {% endblock %}

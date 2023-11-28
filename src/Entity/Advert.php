@@ -3,11 +3,12 @@
 namespace App\Entity;
 
 use App\Repository\AdvertRepository;
+use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
-use Symfony\Component\Validator\Constraints as Assert;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: AdvertRepository::class)]
 class Advert
@@ -34,24 +35,28 @@ class Advert
     private ?Category $category = null;
 
     #[ORM\Column]
-    #[Assert\Range(min: 1,max: 1000000.00)]
+    #[Assert\Range(
+        min: 1,
+        max: 1000000,
+    )]
     private ?float $price = null;
 
     #[ORM\Column(length: 255)]
-    private ?string $state = null;
+    private ?string $state = "draft";
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
-    private ?\DateTimeInterface $createdAt = null;
+    private ?\DateTimeInterface $createdAt;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $publishedAt = null;
 
-    #[ORM\OneToMany(mappedBy: 'advert', targetEntity: Picture::class)]
+    #[ORM\OneToMany(mappedBy: 'advert', targetEntity: Picture::class,cascade: ['persist'])]
     private Collection $pictures;
 
     public function __construct()
     {
         $this->pictures = new ArrayCollection();
+        $this->createdAt = new \DateTime();
     }
 
     public function getId(): ?int
@@ -160,7 +165,7 @@ class Advert
         return $this->publishedAt;
     }
 
-    public function setPublishedAt(?\DateTimeInterface $publishedAt): static
+    public function setPublishedAt(?DateTimeInterface $publishedAt = null): self
     {
         $this->publishedAt = $publishedAt;
 
@@ -188,7 +193,6 @@ class Advert
     public function removePicture(Picture $picture): static
     {
         if ($this->pictures->removeElement($picture)) {
-            // set the owning side to null (unless already changed)
             if ($picture->getAdvert() === $this) {
                 $picture->setAdvert(null);
             }
