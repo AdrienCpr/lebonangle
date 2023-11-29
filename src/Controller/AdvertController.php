@@ -38,33 +38,10 @@ class AdvertController extends AbstractController
     public function new(Request $request, EntityManagerInterface $entityManager, SluggerInterface $slugger): Response
     {
         $advert = new Advert();
-        $form = $this->createForm(AdvertType::class,
-            $advert
-//            , ['is_edit' => false]
-        );
+        $form = $this->createForm(AdvertType::class, $advert);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $picturesFile = $form->get('pictures')->getData();
-
-            foreach ($picturesFile as $pictureFile) {
-                if ($pictureFile instanceof UploadedFile) {
-                    $newFilename = uniqid() . '.' . $pictureFile->guessExtension();
-                    try {
-                        $pictureFile->move(
-                            $this->getParameter('pictures_directory'),
-                            $newFilename
-                        );
-                    } catch (FileException $e) {
-                    }
-
-                    $picture = new Picture();
-                    $picture->setPath($newFilename);
-
-                    $advert->addPicture($picture);
-                }
-            }
-
             $entityManager->persist($advert);
             $entityManager->flush();
 

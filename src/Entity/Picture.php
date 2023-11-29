@@ -2,27 +2,51 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Post;
 use App\Repository\PictureRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Mime\Part\File;
+use Symfony\Component\Serializer\Annotation\Groups;
+use Vich\UploaderBundle\Mapping\Annotation as Vich;
 
 #[ORM\Entity(repositoryClass: PictureRepository::class)]
+#[Vich\Uploadable]
+#[ApiResource(
+    operations: [
+        new Get(normalizationContext: ['groups' => 'picture:item']),
+        new GetCollection(normalizationContext: ['groups' => 'picture:list']),
+        new Post(denormalizationContext: ['groups'=> 'picture:post'])
+    ],
+    order: ['id' => 'ASC'],
+    paginationEnabled: true,
+)]
 class Picture
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups(['picture:item', 'picture:list'])]
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Groups(['picture:item', 'picture:list'])]
     private ?string $path = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
-    private ?\DateTimeInterface $createdAt = null;
+    #[Groups(['picture:item', 'picture:list'])]
+    private ?\DateTimeInterface $createdAt;
 
     #[ORM\ManyToOne(inversedBy: 'pictures')]
+    #[Groups(['picture:item', 'picture:list'])]
     private ?Advert $advert = null;
 
+    #[Vich\UploadableField(mapping: 'picture', fileNameProperty: 'path')]
+    #[Groups(['picture:item', 'picture:list', 'picture:post'])]
+    private ?File $imageFile = null;
     public function __construct()
     {
         $this->createdAt = new \DateTime();
@@ -67,5 +91,15 @@ class Picture
         $this->advert = $advert;
 
         return $this;
+    }
+
+    public function setImageFile(?File $imageFile = null): void
+    {
+        $this->imageFile = $imageFile;
+    }
+
+    public function getImageFile(): ?File
+    {
+        return $this->imageFile;
     }
 }
