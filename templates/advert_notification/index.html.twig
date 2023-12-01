@@ -1,0 +1,21 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Advert index{% endblock %}
+
+{% block body %}
+
+<div class="container mx-auto mt-8 p-4 bg-white rounded shadow-lg">
+    <p class="text-lg font-semibold mb-4">Hello AdminUser,</p>
+
+    <p>A new advert has been created:</p>
+
+    <p class="font-semibold mb-2">Title: {{ advert.title }}</p>
+
+    <p>Please take action:</p>
+
+    <a href="{{ absolute_url(path('app_advert_show', {'id': advert.id})) }}" class="text-blue-500 underline">View Advert</a>
+    <a href="{{ absolute_url(path('app_advert_change_state', {'id': advert.id, 'transition': 'publish'})) }}" class="text-green-500 underline">Publish Advert</a>
+    <a href="{{ absolute_url(path('app_advert_change_state', {'id': advert.id, 'transition': 'reject'})) }}" class="text-red-500 underline">Reject Advert</a>
+</div>
+
+{% endblock %}

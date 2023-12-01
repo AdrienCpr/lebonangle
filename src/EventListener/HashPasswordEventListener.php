@@ -31,6 +31,7 @@ class HashPasswordEventListener
     private function setPassword(PrePersistEventArgs|PreUpdateEventArgs $event): void
     {
         $entity = $event->getObject();
+
         if(!$entity instanceof AdminUser) {
             return;
         }

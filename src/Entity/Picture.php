@@ -6,12 +6,14 @@ use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Post;
+use App\Controller\CreateMediaObjectAction;
 use App\Repository\PictureRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Mime\Part\File;
 use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\HttpFoundation\File\File;
 use Vich\UploaderBundle\Mapping\Annotation as Vich;
+use ApiPlatform\OpenApi\Model;
 
 #[ORM\Entity(repositoryClass: PictureRepository::class)]
 #[Vich\Uploadable]
@@ -19,10 +21,29 @@ use Vich\UploaderBundle\Mapping\Annotation as Vich;
     operations: [
         new Get(normalizationContext: ['groups' => 'picture:item']),
         new GetCollection(normalizationContext: ['groups' => 'picture:list']),
-        new Post(denormalizationContext: ['groups'=> 'picture:post'])
-    ],
-    order: ['id' => 'ASC'],
-    paginationEnabled: true,
+        new Post(
+            controller: CreateMediaObjectAction::class,
+            openapi: new Model\Operation(
+                requestBody: new Model\RequestBody(
+                    content: new \ArrayObject([
+                        'multipart/form-data' => [
+                            'schema' => [
+                                'type' => 'object',
+                                'properties' => [
+                                    'file' => [
+                                        'type' => 'string',
+                                        'format' => 'binary'
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ])
+                )
+            ),
+            validationContext: ['groups' => ['Default', 'media_object_create']],
+            deserialize: false
+        )
+    ]
 )]
 class Picture
 {
@@ -45,7 +66,7 @@ class Picture
     private ?Advert $advert = null;
 
     #[Vich\UploadableField(mapping: 'picture', fileNameProperty: 'path')]
-    #[Groups(['picture:item', 'picture:list', 'picture:post'])]
+    #[Groups(['picture:item', 'picture:list', 'media_object_create'])]
     private ?File $imageFile = null;
     public function __construct()
     {

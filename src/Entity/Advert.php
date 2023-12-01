@@ -2,12 +2,19 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Doctrine\Odm\Filter\RangeFilter;
+use ApiPlatform\Doctrine\Orm\Filter\NumericFilter;
+use ApiPlatform\Doctrine\Orm\Filter\OrderFilter;
+use ApiPlatform\Doctrine\Orm\Filter\SearchFilter;
+use ApiPlatform\Metadata\ApiFilter;
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Post;
+use App\EventListener\AdvertCreatedEventListener;
 use App\Repository\AdvertRepository;
 use DateTimeInterface;
+use DeepCopy\Filter\ChainableFilter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
@@ -17,6 +24,8 @@ use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: AdvertRepository::class)]
+//#[ORM\EntityListeners([AdvertCreatedEventListener::class])]
+
 #[ApiResource(
     operations: [
         new Get(normalizationContext: ['groups' => 'advert:item']),
@@ -26,6 +35,9 @@ use Symfony\Component\Validator\Constraints as Assert;
     order: ['id' => 'ASC'],
     paginationEnabled: true,
 )]
+#[ApiFilter(OrderFilter::class, properties: ['publishedAt', 'price'])]
+#[ApiFilter(RangeFilter::class, properties: ['price'])]
+#[ApiFilter(SearchFilter::class, properties: ['category'])]
 class Advert
 {
     #[ORM\Id]

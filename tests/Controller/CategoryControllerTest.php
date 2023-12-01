@@ -42,7 +42,7 @@ class CategoryControllerTest extends WebTestCase
         $this->client->request('GET', sprintf('%snew', $this->path));
         self::assertResponseStatusCodeSame(200);
 
-        $this->client->submitForm('Save', [
+        $this->client->submitForm('category[save]', [ // Change 'Save' to 'category[save]'
             'category[name]' => 'Testing',
         ]);
 
@@ -75,7 +75,7 @@ class CategoryControllerTest extends WebTestCase
 
         $this->client->request('GET', sprintf('%s%s/edit', $this->path, $fixture->getId()));
 
-        $this->client->submitForm('Update', [
+        $this->client->submitForm('category[save]', [ // Change 'Update' to 'category[save]'
             'category[name]' => 'Something New',
         ]);
 
@@ -99,7 +99,10 @@ class CategoryControllerTest extends WebTestCase
         self::assertSame($originalNumObjectsInRepository + 1, count($this->repository->findAll()));
 
         $this->client->request('GET', sprintf('%s%s', $this->path, $fixture->getId()));
-        $this->client->submitForm('Delete');
+
+        // Add CSRF token validation
+        $token = $this->client->getContainer()->get('security.csrf.token_manager')->getToken('delete' . $fixture->getId());
+        $this->client->submitForm('Delete', ['_token' => $token]);
 
         self::assertSame($originalNumObjectsInRepository, count($this->repository->findAll()));
         self::assertResponseRedirects('/admin/category/');

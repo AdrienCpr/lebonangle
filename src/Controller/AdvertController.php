@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Advert;
 use App\Entity\Picture;
+use App\Event\AdvertCreatedEvent;
 use App\Form\AdvertType;
 use App\Repository\AdvertRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -12,10 +13,13 @@ use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Event\ViewEvent;
+use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\String\Slugger\SluggerInterface;
 use Symfony\Component\Workflow\WorkflowInterface;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 //#[Route('/advert')]
 class AdvertController extends AbstractController
@@ -35,7 +39,7 @@ class AdvertController extends AbstractController
     }
 
     #[Route('/advert/new', name: 'app_advert_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $entityManager, SluggerInterface $slugger): Response
+    public function new(Request $request, EntityManagerInterface $entityManager, AdvertNotificationController $advertNotificationController): Response
     {
         $advert = new Advert();
         $form = $this->createForm(AdvertType::class, $advert);
