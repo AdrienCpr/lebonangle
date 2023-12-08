@@ -39,7 +39,7 @@ class AdvertController extends AbstractController
     }
 
     #[Route('/advert/new', name: 'app_advert_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $entityManager, AdvertNotificationController $advertNotificationController): Response
+    public function new(Request $request, EntityManagerInterface $entityManager): Response
     {
         $advert = new Advert();
         $form = $this->createForm(AdvertType::class, $advert);
