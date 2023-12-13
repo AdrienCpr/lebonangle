@@ -21,9 +21,6 @@ class CategoryControllerTest extends WebTestCase
         $this->manager = static::getContainer()->get('doctrine.orm.entity_manager');
         $this->repository = $this->manager->getRepository(Category::class);
 
-        foreach ($this->repository->findAll() as $object) {
-            $this->manager->remove($object);
-        }
         $this->manager->flush();
     }
 
