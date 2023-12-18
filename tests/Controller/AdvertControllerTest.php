@@ -33,9 +33,9 @@ class AdvertControllerTest extends WebTestCase
         $container = static::getContainer();
         $container->set('App\Workflow\AdvertWorkflow', $this->advertWorkflow);
 
-        foreach ($this->repository->findAll() as $object) {
-            $this->manager->remove($object);
-        }
+//        foreach ($this->repository->findAll() as $object) {
+//            $this->manager->remove($object);
+//        }
         $this->manager->flush();
     }
 
